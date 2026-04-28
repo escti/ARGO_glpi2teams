@@ -17,9 +17,10 @@ class GlpiClient:
         self.base_url = f"{GLPI_URL}/apirest.php"
         self.session_token = None
         self.headers = {
-            'App-Token': GLPI_APP_TOKEN,
             'Content-Type': 'application/json'
         }
+        if GLPI_APP_TOKEN:
+            self.headers['App-Token'] = GLPI_APP_TOKEN
 
     def _init_session(self):
         if self.session_token:
