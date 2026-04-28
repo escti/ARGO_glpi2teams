@@ -27,16 +27,22 @@ class GlpiClient:
             return True
             
         try:
-            headers = self.headers.copy()
-            headers['Authorization'] = f"user_token {GLPI_USER_TOKEN}"
+            # Tenta autenticar passando o user_token na query string, o que às vezes 
+            # ignora a necessidade de App-Token dependendo da versão do GLPI
+            params = {'user_token': GLPI_USER_TOKEN}
             
             response = requests.get(
                 f"{self.base_url}/initSession", 
-                headers=headers,
+                params=params,
+                headers=self.headers,
                 verify=False,
                 timeout=10
             )
-            response.raise_for_status()
+            
+            if response.status_code != 200:
+                print(f"Falha no initSession: Status {response.status_code}")
+                print(f"Resposta: {response.text}")
+                response.raise_for_status()
             
             self.session_token = response.json().get('session_token')
             self.headers['Session-Token'] = self.session_token
