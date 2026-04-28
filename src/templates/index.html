@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
@@ -57,7 +57,7 @@
             }
         }
 
-        /* OtimizaÃ§Ã£o de scrollbar conforme SKILL.md */
+        /* Otimização de scrollbar conforme SKILL.md */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -129,10 +129,10 @@
                             User:</span>
                         <input type="text" id="user-input" value="{{ users[0] }}"
                             class="bg-transparent border-0 font-bold text-sm focus:ring-0 outline-none w-[350px] placeholder-slate-400"
-                            placeholder="Digite o usuÃ¡rio ou email..." autocomplete="off" spellcheck="false"
+                            placeholder="Digite o usuário ou email..." autocomplete="off" spellcheck="false"
                             title="Pressione Enter para buscar" />
                     </div>
-                    <span class="text-[10px] text-slate-400 mt-1 pl-4">Digite o usuÃ¡rio e aperte Enter. Ex.:
+                    <span class="text-[10px] text-slate-400 mt-1 pl-4">Digite o usuário e aperte Enter. Ex.:
                         thiago.albuquerque</span>
                 </div>
 
@@ -151,8 +151,8 @@
             class="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-l-4 border-red-500 p-6 rounded-2xl shadow-lg flex items-center gap-5">
             <i class="bi bi-exclamation-triangle-fill text-3xl text-red-500"></i>
             <div>
-                <h5 class="font-bold text-red-500 text-lg">RejeiÃ§Ã£o da API do GLPI</h5>
-                <span id="error-txt" class="text-sm opacity-80">Sua query JQL contÃ©m parÃ¢metros invÃ¡lidos.</span>
+                <h5 class="font-bold text-red-500 text-lg">Rejeição da API do GLPI</h5>
+                <span id="error-txt" class="text-sm opacity-80">Sua query JQL contém parâmetros inválidos.</span>
             </div>
         </div>
     </div>
@@ -164,19 +164,19 @@
         <div class="flex flex-wrap border-b border-black/10 dark:border-white/10 mb-6 gap-2">
             <button onclick="switchTab('tab-sustentacao')" id="btn-tab-sustentacao"
                 class="px-6 py-3 font-bold text-sm text-blue-600 border-b-2 border-blue-600 transition-all">
-                ðŸ•’ SustentaÃ§Ã£o & DBA
+                🕒 Sustentação & DBA
             </button>
             <button onclick="switchTab('tab-projetos')" id="btn-tab-projetos"
                 class="px-6 py-3 font-semibold text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-all">
-                ðŸš€ Projetos Ativos
+                🚀 Projetos Ativos
             </button>
             <button onclick="switchTab('tab-finalizados')" id="btn-tab-finalizados"
                 class="px-6 py-3 font-semibold text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-all">
-                âœ… Finalizados (MÃªs)
+                ✅ Finalizados (Mês)
             </button>
         </div>
 
-        <!-- TAB 1: SUSTENTAÃ‡ÃƒO -->
+        <!-- TAB 1: SUSTENTAÇÃO -->
         <div id="tab-sustentacao" class="columns-1 lg:columns-2 gap-6">
 
             <!-- Fila DBA Urgente -->
@@ -203,13 +203,13 @@
                 </div>
             </div>
 
-            <!-- SLA CrÃ­tico -->
+            <!-- SLA Crítico -->
             <div class="glass-card break-inside-avoid mb-6">
                 <div class="card-header-styled bg-gradient-to-r from-amber-400 to-orange-500 text-white cursor-pointer hover:opacity-90 justify-between"
                     onclick="toggleCard('body_sla', 'icon_sla')" title="Clique para expandir/recolher">
                     <div class="flex items-center gap-2.5">
                         <i class="bi bi-exclamation-triangle"></i>
-                        <span class="text-base flex items-center">SLA CrÃ­tico (< 1h) <span
+                        <span class="text-base flex items-center">SLA Crítico (< 1h) <span
                                 id="count-sla"
                                 class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
                     </div>
@@ -253,13 +253,13 @@
                 </div>
             </div>
 
-            <!-- Sem InteraÃ§Ã£o -->
+            <!-- Sem Interação -->
             <div class="glass-card break-inside-avoid mb-6">
                 <div class="card-header-styled bg-gradient-to-r from-slate-400 to-slate-600 text-white cursor-pointer hover:opacity-90 justify-between"
                     onclick="toggleCard('body_sem_int', 'icon_sem_int')" title="Clique para expandir/recolher">
                     <div class="flex items-center gap-2.5">
                         <i class="bi bi-clock-history"></i>
-                        <span class="text-base flex items-center">Sem InteraÃ§Ã£o (+3 dias) <span
+                        <span class="text-base flex items-center">Sem Interação (+3 dias) <span
                                 id="count-sem_interacao"
                                 class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
                     </div>
@@ -313,7 +313,7 @@
                     onclick="toggleCard('body_finalizados', 'icon_finalizados')" title="Clique para expandir/recolher">
                     <div class="flex items-center gap-2.5">
                         <i class="bi bi-check2-all"></i>
-                        <span class="text-base flex items-center">Chamados Finalizados (Este MÃªs) <span
+                        <span class="text-base flex items-center">Chamados Finalizados (Este Mês) <span
                                 id="count-finalizados"
                                 class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
                     </div>
@@ -337,7 +337,7 @@
 
     <footer
         class="text-center py-10 mt-12 border-t border-black/5 dark:border-white/5 text-slate-400 text-xs tracking-wide">
-        ATG Monitor Flow &copy; 2026 | VersÃ£o <span class="font-bold text-blue-500/80">0.5.0</span>
+        ATG Monitor Flow &copy; 2026 | Versão <span class="font-bold text-blue-500/80">0.5.0</span>
     </footer>
 
     <script>
@@ -365,7 +365,7 @@
                 updateTable('finalizados', data.finalizados);
                 updateTable('dba', data.dba);
 
-                document.getElementById('last-update').innerText = 'Sincronizado Ã s ' + new Date().toLocaleTimeString();
+                document.getElementById('last-update').innerText = 'Sincronizado às ' + new Date().toLocaleTimeString();
                 document.getElementById('error-msg').classList.add('hidden');
 
             } catch (error) {
@@ -396,7 +396,7 @@
             }
 
             if (!issues || issues.length === 0) {
-                tbody.innerHTML = `<tr><td class="p-8 text-center text-slate-400/60 bg-white/10"><i class="bi bi-check2-circle text-4xl text-green-500/30 block mb-2"></i><span class="font-semibold text-sm">Nenhuma pendÃªncia encontrada.</span></td></tr>`;
+                tbody.innerHTML = `<tr><td class="p-8 text-center text-slate-400/60 bg-white/10"><i class="bi bi-check2-circle text-4xl text-green-500/30 block mb-2"></i><span class="font-semibold text-sm">Nenhuma pendência encontrada.</span></td></tr>`;
                 return;
             }
 
