@@ -1,0 +1,517 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLPI Dashboard - ATG</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'accent-blue': '#4Facfe',
+                        'accent-purple': '#00f2fe',
+                        'glass-bg': 'rgba(255, 255, 255, 0.7)',
+                        'dark-glass-bg': 'rgba(40, 40, 45, 0.7)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply min-h-screen transition-colors duration-300;
+                background-image: radial-gradient(circle at 50% 50%, #fdfbfb 0%, #ebedee 100%);
+                background-attachment: fixed;
+            }
+            .dark body {
+                background-image: radial-gradient(circle at 50% 50%, #1c1c1c 0%, #0d0d0d 100%);
+            }
+        }
+
+        @layer components {
+            .glass-card {
+                @apply bg-white/70 dark:bg-[#28282d]/70 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[20px] shadow-xl overflow-hidden transition-all duration-300;
+            }
+            .glass-card:hover {
+                @apply -translate-y-1 shadow-2xl shadow-blue-500/10;
+            }
+            .card-header-styled {
+                @apply font-semibold px-6 py-3.5 text-lg tracking-wide flex items-center gap-2.5;
+            }
+            .btn-modern {
+                @apply px-4 py-1.5 rounded-full font-semibold transition-all duration-300 text-sm active:scale-95;
+            }
+            .issue-row {
+                @apply transition-all duration-200 border-b border-black/5 dark:border-white/5 hover:bg-white/90 dark:hover:bg-white/5 hover:scale-[1.01];
+            }
+        }
+
+        /* OtimizaÃ§Ã£o de scrollbar conforme SKILL.md */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            @apply rounded-full;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 dark:text-slate-100 pb-12">
+    <!-- Navbar -->
+    <nav
+        class="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-white/20 dark:border-white/5 shadow-sm py-4 mb-8">
+        <div class="container mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <i
+                    class="bi bi-kanban text-3xl align-middle bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent"></i>
+                <span
+                    class="text-2xl font-bold tracking-tight bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+                    ATG Monitor Flow
+                </span>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-4 lg:gap-6">
+                <div class="hidden sm:block text-right">
+                    <div id="last-update" class="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                        Atualizando...</div>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div
+                        class="flex items-center bg-white dark:bg-zinc-800 p-1 px-3 rounded-full shadow-sm border border-black/5 dark:border-white/5">
+                        <i class="bi bi-clock-history text-slate-400 mr-2 text-sm"></i>
+                        <select id="refresh-interval"
+                            class="bg-transparent border-0 font-bold text-sm text-slate-600 dark:text-slate-300 focus:ring-0 cursor-pointer outline-none">
+                            <option value="300000" class="dark:bg-zinc-900" selected>5 min</option>
+                            <option value="600000" class="dark:bg-zinc-900">10 min</option>
+                            <option value="900000" class="dark:bg-zinc-900">15 min</option>
+                            <option value="1800000" class="dark:bg-zinc-900">30 min</option>
+                            <option value="3600000" class="dark:bg-zinc-900">60 min</option>
+                        </select>
+                    </div>
+                    <span class="text-[9px] text-slate-400 mt-1">Auto-refresh</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <button id="btn-refresh" onclick="manualRefresh()"
+                        class="flex items-center gap-2 bg-white dark:bg-zinc-800 text-slate-700 dark:text-slate-200 px-6 py-2 rounded-full font-bold shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all active:scale-95">
+                        <i class="bi bi-arrow-clockwise"></i> Sincronizar
+                    </button>
+                    <span class="text-[9px] text-slate-400 mt-1">Atualizar agora</span>
+                </div>
+
+                <div class="flex flex-col items-start">
+                    <div
+                        class="flex items-center bg-white dark:bg-zinc-800 p-1 pr-4 rounded-full shadow-sm border border-black/5 dark:border-white/5 w-full">
+                        <div class="bg-blue-50 dark:bg-blue-900/30 rounded-full p-2 px-3 mr-2 text-blue-500">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <span
+                            class="hidden md:inline text-xs font-bold text-slate-400 uppercase tracking-tighter mr-2">Jira
+                            User:</span>
+                        <input type="text" id="user-input" value="{{ users[0] }}"
+                            class="bg-transparent border-0 font-bold text-sm focus:ring-0 outline-none w-[350px] placeholder-slate-400"
+                            placeholder="Digite o usuÃ¡rio ou email..." autocomplete="off" spellcheck="false"
+                            title="Pressione Enter para buscar" />
+                    </div>
+                    <span class="text-[10px] text-slate-400 mt-1 pl-4">Digite o usuÃ¡rio e aperte Enter. Ex.:
+                        thiago.albuquerque</span>
+                </div>
+
+                <button id="btn-theme" onclick="toggleTheme()"
+                    class="bg-white dark:bg-zinc-800 p-2.5 px-4 rounded-full shadow-sm border border-black/5 dark:border-white/5 transition-colors group">
+                    <i class="bi bi-moon-stars-fill text-blue-500 group-hover:text-blue-400 transition-colors"
+                        id="theme-icon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Error Alert -->
+    <div class="container mx-auto px-6 lg:px-12 mb-8 hidden" id="error-msg">
+        <div
+            class="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-l-4 border-red-500 p-6 rounded-2xl shadow-lg flex items-center gap-5">
+            <i class="bi bi-exclamation-triangle-fill text-3xl text-red-500"></i>
+            <div>
+                <h5 class="font-bold text-red-500 text-lg">RejeiÃ§Ã£o da API do GLPI</h5>
+                <span id="error-txt" class="text-sm opacity-80">Sua query JQL contÃ©m parÃ¢metros invÃ¡lidos.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 lg:px-12">
+
+        <!-- Tabs Navigation -->
+        <div class="flex flex-wrap border-b border-black/10 dark:border-white/10 mb-6 gap-2">
+            <button onclick="switchTab('tab-sustentacao')" id="btn-tab-sustentacao"
+                class="px-6 py-3 font-bold text-sm text-blue-600 border-b-2 border-blue-600 transition-all">
+                ðŸ•’ SustentaÃ§Ã£o & DBA
+            </button>
+            <button onclick="switchTab('tab-projetos')" id="btn-tab-projetos"
+                class="px-6 py-3 font-semibold text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-all">
+                ðŸš€ Projetos Ativos
+            </button>
+            <button onclick="switchTab('tab-finalizados')" id="btn-tab-finalizados"
+                class="px-6 py-3 font-semibold text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-all">
+                âœ… Finalizados (MÃªs)
+            </button>
+        </div>
+
+        <!-- TAB 1: SUSTENTAÃ‡ÃƒO -->
+        <div id="tab-sustentacao" class="columns-1 lg:columns-2 gap-6">
+
+            <!-- Fila DBA Urgente -->
+            <div class="glass-card ring-2 ring-red-500/20 break-inside-avoid mb-6">
+                <div class="card-header-styled bg-gradient-to-r from-red-600 to-rose-500 text-white cursor-pointer hover:opacity-90 justify-between"
+                    onclick="toggleCard('body_dba', 'icon_dba')" title="Clique para expandir/recolher">
+                    <div class="flex items-center gap-2.5">
+                        <i class="bi bi-fire"></i>
+                        <span class="text-base flex items-center">Fila DBA Urgente <span id="count-dba"
+                                class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
+                    </div>
+                    <i id="icon_dba" class="bi bi-chevron-up opacity-80"></i>
+                </div>
+                <div id="body_dba" class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="dba">
+                            <tr>
+                                <td class="p-4">
+                                    <div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SLA CrÃ­tico -->
+            <div class="glass-card break-inside-avoid mb-6">
+                <div class="card-header-styled bg-gradient-to-r from-amber-400 to-orange-500 text-white cursor-pointer hover:opacity-90 justify-between"
+                    onclick="toggleCard('body_sla', 'icon_sla')" title="Clique para expandir/recolher">
+                    <div class="flex items-center gap-2.5">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span class="text-base flex items-center">SLA CrÃ­tico (< 1h) <span
+                                id="count-sla"
+                                class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
+                    </div>
+                    <i id="icon_sla" class="bi bi-chevron-up opacity-80"></i>
+                </div>
+                <div id="body_sla" class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="sla">
+                            <tr>
+                                <td class="p-4">
+                                    <div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Aguardando -->
+            <div class="glass-card break-inside-avoid mb-6">
+                <div class="card-header-styled bg-gradient-to-r from-blue-500 to-cyan-400 text-white cursor-pointer hover:opacity-90 justify-between"
+                    onclick="toggleCard('body_aguardando', 'icon_aguardando')" title="Clique para expandir/recolher">
+                    <div class="flex items-center gap-2.5">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span class="text-base flex items-center">Aguardando Atendimento <span
+                                id="count-aguardando"
+                                class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
+                    </div>
+                    <i id="icon_aguardando" class="bi bi-chevron-up opacity-80"></i>
+                </div>
+                <div id="body_aguardando" class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="aguardando">
+                            <tr>
+                                <td class="p-4">
+                                    <div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sem InteraÃ§Ã£o -->
+            <div class="glass-card break-inside-avoid mb-6">
+                <div class="card-header-styled bg-gradient-to-r from-slate-400 to-slate-600 text-white cursor-pointer hover:opacity-90 justify-between"
+                    onclick="toggleCard('body_sem_int', 'icon_sem_int')" title="Clique para expandir/recolher">
+                    <div class="flex items-center gap-2.5">
+                        <i class="bi bi-clock-history"></i>
+                        <span class="text-base flex items-center">Sem InteraÃ§Ã£o (+3 dias) <span
+                                id="count-sem_interacao"
+                                class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
+                    </div>
+                    <i id="icon_sem_int" class="bi bi-chevron-up opacity-80"></i>
+                </div>
+                <div id="body_sem_int" class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="sem_interacao">
+                            <tr>
+                                <td class="p-4">
+                                    <div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PROJETOS ATIVOS -->
+        <div id="tab-projetos" class="hidden">
+            <div class="glass-card border-blue-500/20">
+                <div class="card-header-styled bg-gradient-to-r from-indigo-500 to-purple-500 text-white cursor-pointer hover:opacity-90 justify-between"
+                    onclick="toggleCard('body_projetos', 'icon_projetos')" title="Clique para expandir/recolher">
+                    <div class="flex items-center gap-2.5">
+                        <i class="bi bi-rocket-takeoff"></i>
+                        <span class="text-base flex items-center">Projetos Ativos (TIC/GPM) <span
+                                id="count-projetos"
+                                class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
+                    </div>
+                    <i id="icon_projetos" class="bi bi-chevron-up opacity-80"></i>
+                </div>
+                <div id="body_projetos" class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="projetos">
+                            <tr>
+                                <td class="p-4">
+                                    <div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: FINALIZADOS -->
+        <div id="tab-finalizados" class="hidden">
+            <div class="glass-card border-green-500/20">
+                <div class="card-header-styled bg-gradient-to-r from-emerald-400 to-green-500 text-white cursor-pointer hover:opacity-90 justify-between"
+                    onclick="toggleCard('body_finalizados', 'icon_finalizados')" title="Clique para expandir/recolher">
+                    <div class="flex items-center gap-2.5">
+                        <i class="bi bi-check2-all"></i>
+                        <span class="text-base flex items-center">Chamados Finalizados (Este MÃªs) <span
+                                id="count-finalizados"
+                                class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full ml-3 font-bold">0</span></span>
+                    </div>
+                    <i id="icon_finalizados" class="bi bi-chevron-up opacity-80"></i>
+                </div>
+                <div id="body_finalizados" class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="finalizados">
+                            <tr>
+                                <td class="p-4">
+                                    <div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer
+        class="text-center py-10 mt-12 border-t border-black/5 dark:border-white/5 text-slate-400 text-xs tracking-wide">
+        ATG Monitor Flow &copy; 2026 | VersÃ£o <span class="font-bold text-blue-500/80">0.5.0</span>
+    </footer>
+
+    <script>
+        const loadingHtml = `<tr><td class="p-8"><div class="animate-pulse flex flex-col gap-3"><div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-full"></div><div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div></div></td></tr>`;
+
+        async function fetchData() {
+            try {
+                const selectedUser = document.getElementById('user-input').value.trim();
+                const url = selectedUser ? `/api/data?user=${encodeURIComponent(selectedUser)}` : '/api/data';
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => null);
+                    if (errData && errData.error) throw new Error(errData.error);
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                updateTable('aguardando', data.aguardando);
+                updateTable('sla', data.sla);
+                updateTable('sem_interacao', data.sem_interacao);
+                updateTable('projetos', data.projetos);
+                updateTable('finalizados', data.finalizados);
+                updateTable('dba', data.dba);
+
+                document.getElementById('last-update').innerText = 'Sincronizado Ã s ' + new Date().toLocaleTimeString();
+                document.getElementById('error-msg').classList.add('hidden');
+
+            } catch (error) {
+                console.error('Erro:', error);
+                const errorMsg = document.getElementById('error-msg');
+                document.getElementById('error-txt').innerText = error.message;
+                errorMsg.classList.remove('hidden');
+
+                const emptyState = '<tr><td class="p-6 text-center text-slate-400 italic text-sm">Falha ao carregar API</td></tr>';
+                ['aguardando', 'sla', 'sem_interacao', 'projetos', 'finalizados', 'dba'].forEach(id => {
+                    document.getElementById(id).innerHTML = emptyState;
+                });
+            }
+        }
+
+        function getStatusColor(category) {
+            if (category === 'done') return 'bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+            if (category === 'indeterminate') return 'bg-amber-500/10 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-500/20';
+            return 'bg-slate-500/10 dark:bg-white/10 text-slate-600 dark:text-slate-300 border-slate-500/20';
+        }
+
+        function updateTable(id, issues) {
+            const tbody = document.getElementById(id);
+            const countSpan = document.getElementById('count-' + id);
+
+            if (countSpan) {
+                countSpan.innerText = issues ? issues.length : 0;
+            }
+
+            if (!issues || issues.length === 0) {
+                tbody.innerHTML = `<tr><td class="p-8 text-center text-slate-400/60 bg-white/10"><i class="bi bi-check2-circle text-4xl text-green-500/30 block mb-2"></i><span class="font-semibold text-sm">Nenhuma pendÃªncia encontrada.</span></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = issues.map(issue => `
+                <tr class="issue-row">
+                    <td class="p-3 px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="bg-slate-500/10 dark:bg-white/10 text-slate-500 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded border border-black/5 dark:border-white/10">${issue.key}</span>
+                                <span class="${getStatusColor(issue.status_category)} text-[9px] font-bold px-2 py-0.5 rounded border">${issue.status}</span>
+                                <h4 class="font-bold text-sm text-slate-700 dark:text-slate-200 leading-tight">${issue.summary}</h4>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
+                                <i class="bi bi-calendar-check"></i> Atualizado: ${issue.updated}
+                            </div>
+                        </div>
+                        <a href="${issue.url}" target="_blank" class="btn-modern bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 whitespace-nowrap text-xs px-3 py-1">
+                            Abrir <i class="bi bi-box-arrow-up-right ml-1"></i>
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function setLoaders() {
+            ['aguardando', 'sla', 'sem_interacao', 'projetos', 'finalizados', 'dba'].forEach(id => {
+                document.getElementById(id).innerHTML = loadingHtml;
+            });
+        }
+
+        let refreshTimer;
+
+        function startAutoRefresh() {
+            if (refreshTimer) clearInterval(refreshTimer);
+            const interval = parseInt(document.getElementById('refresh-interval').value, 10);
+            refreshTimer = setInterval(fetchData, interval);
+        }
+
+        document.getElementById('refresh-interval').addEventListener('change', function () {
+            startAutoRefresh();
+            manualRefresh();
+        });
+
+        const userInput = document.getElementById('user-input');
+        userInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                userInput.blur();
+                manualRefresh();
+            }
+        });
+
+        setTimeout(() => {
+            fetchData();
+            startAutoRefresh();
+        }, 400);
+
+        async function manualRefresh() {
+            const btn = document.getElementById('btn-refresh');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<div class="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"></div> Sincronizando...';
+            btn.disabled = true;
+            setLoaders();
+            await fetchData();
+            btn.innerHTML = original;
+            btn.disabled = false;
+        }
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                document.getElementById('theme-icon').classList.replace('text-blue-500', 'text-yellow-400');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-icon').classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                document.getElementById('theme-icon').classList.replace('text-yellow-400', 'text-blue-500');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        function toggleTheme() {
+            setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+        }
+
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        setTheme(savedTheme);
+
+        function toggleCard(bodyId, iconId) {
+            const body = document.getElementById(bodyId);
+            const icon = document.getElementById(iconId);
+
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
+            } else {
+                body.classList.add('hidden');
+                icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
+            }
+        }
+
+        function switchTab(activeTabId) {
+            const tabs = ['tab-sustentacao', 'tab-projetos', 'tab-finalizados'];
+            tabs.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                const btn = document.getElementById('btn-' + id);
+                btn.classList.remove('text-blue-600', 'border-blue-600', 'font-bold');
+                btn.classList.add('text-slate-500', 'border-transparent', 'font-semibold');
+            });
+
+            document.getElementById(activeTabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + activeTabId);
+            activeBtn.classList.add('text-blue-600', 'border-blue-600', 'font-bold');
+            activeBtn.classList.remove('text-slate-500', 'border-transparent', 'font-semibold');
+        }
+    </script>
+</body>
+
+</html>
