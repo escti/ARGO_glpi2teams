@@ -95,10 +95,38 @@ class GlpiClient:
             "url": f"{GLPI_URL}/front/ticket.form.php?id={ticket_id}"
         }
 
+    def _get_user_id(self, username):
+        if not username or username == 'Todos':
+            return 'myself'
+        if not self._init_session():
+            return 'myself'
+        try:
+            params = {
+                'is_deleted': 0,
+                'as_map': 0,
+                'range': '0-1',
+                'criteria[0][field]': 1, # name (username) ou 9 para e-mail
+                'criteria[0][searchtype]': 'contains',
+                'criteria[0][value]': username
+            }
+            query_string = urllib.parse.urlencode(params)
+            response = requests.get(
+                f"{self.base_url}/search/User?{query_string}", 
+                headers=self.headers,
+                verify=False,
+                timeout=10
+            )
+            if response.status_code == 200:
+                data = response.json()
+                users = data.get('data', [])
+                if users:
+                    return users[0].get('2', 'myself') # id do usuário é o field 2
+        except Exception as e:
+            print(f"Erro ao buscar usuário: {e}")
+        return 'myself'
+
     def get_dashboard_data(self, user=None):
-        # user pode vir como ID se adaptarmos, mas por enquanto, vamos assumir o ID do Thiago que você informou
-        # Idealmente, faríamos um get no User, mas vamos fixar o field 5 para o seu ID por hora
-        user_id = '2236' 
+        user_id = self._get_user_id(user)
         
         dashboard = {
             'aguardando': [],
